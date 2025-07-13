@@ -1,0 +1,1 @@
+Get-WmiObject -Class Win32_Service | Where-Object { $_.StartMode -eq "Disabled" } | Select-Object Name, DisplayName, StartMode

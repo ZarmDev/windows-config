@@ -1,0 +1,82 @@
+AdskLicensingService                     Autodesk Desktop Licensing Service
+AppVClient                               Microsoft App-V Client
+BDESVC                                   BitLocker Drive Encryption Service
+CDPSvc                                   Connected Devices Platform Service
+cplspcon                                 Intel(R) Content Protection HDCP Service
+diagnosticshub.standardcollector.service Microsoft (R) Diagnostics Hub Standard Collector Service
+diagsvc                                  Diagnostic Execution Service
+DiagTrack                                Connected User Experiences and Telemetry
+DialogBlockingService                    DialogBlockingService
+DispBrokerDesktopSvc                     Display Policy Service
+DmEnrollmentSvc                          Device Management Enrollment Service
+dmwappushservice                         Device Management Wireless Application Protocol (WAP) Push message Routing ...
+DPS                                      Diagnostic Policy Service
+DusmSvc                                  Data Usage
+DoSvc                                    Delivery Optimization
+EpicOnlineServices                       Epic Online Services
+esifsvc                                  Intel(R) Dynamic Tuning service
+EventLog                                 Windows Event Log
+FlexNet Licensing Service 64             FlexNet Licensing Service 64
+HvHost                                   HV Host Service
+iaStorAfsService                         Intel(R) Optane(TM) Memory Service
+igccservice                              Intel(R) Graphics Command Center Service
+igfxCUIService2.0.0.0                    Intel(R) HD Graphics Control Panel Service
+InstallService                           Microsoft Store Install Service
+Intel(R) TPM Provisioning Service        Intel(R) TPM Provisioning Service
+IntelAudioService                        Intel(R) Audio Service
+jhi_service                              Intel(R) Dynamic Application Loader Host Interface Service
+lfsvc                                    Geolocation Service
+lkClassAds                               NI PSP Service Locator
+lkTimeSync                               NI Time Synchronization
+lmhosts                                  TCP/IP NetBIOS Helper
+MapsBroker                               Downloaded Maps Manager
+McpManagementService                     McpManagementService
+MongoDB                                  MongoDB Server (MongoDB)
+MozillaMaintenance                       Mozilla Maintenance Service
+MsKeyboardFilter                         Microsoft Keyboard Filter
+NetTcpPortSharing                        Net.Tcp Port Sharing Service
+niauth                                   NI Authentication Service
+NIDomainService                          NI Domain Service
+nimDNSResponder                          NI mDNS Responder Service
+NINetworkDiscovery                       NI Network Discovery
+NiSvcLoc                                 NI Service Locator
+PhoneSvc                                 Phone Service
+ProtonVPN Service                        ProtonVPN Service
+ProtonVPN WireGuard                      ProtonVPN WireGuard
+RasAuto                                  Remote Access Auto Connection Manager
+RasMan                                   Remote Access Connection Manager
+RemoteAccess                             Routing and Remote Access
+RemoteRegistry                           Remote Registry
+RstMwService                             Intel(R) Storage Middleware Service
+RtkAudioUniversalService                 Realtek Audio Universal Service
+SensorDataService                        Sensor Data Service
+SensorService                            Sensor Service
+SensrSvc                                 Sensor Monitoring Service
+SessionEnv                               Remote Desktop Configuration
+SessionSvc                               Session Detection
+shpamsvc                                 Shared PC Account Manager
+ssh-agent                                OpenSSH Authentication Agent
+ss_conn_service                          SAMSUNG Mobile Connectivity Service
+ss_conn_service2                         SAMSUNG Mobile Connectivity Service V2
+Steam Client Service                     Steam Client Service
+TapiSrv                                  Telephony
+TrustedInstaller                         Windows Modules Installer
+tzautoupdate                             Auto Time Zone Updater
+UevAgentService                          User Experience Virtualization Service
+uhssvc                                   Microsoft Update Health Service
+UmRdpService                             Remote Desktop Services UserMode Port Redirector
+VSInstallerElevationService              Visual Studio Installer Elevation Service
+WalletService                            WalletService
+WavesAudioService                        Waves Audio Universal Services
+WavesSysSvc                              Waves Audio Services
+WbioSrvc                                 Windows Biometric Service
+WdiServiceHost                           Diagnostic Service Host
+WdiSystemHost                            Diagnostic System Host
+WerSvc                                   Windows Error Reporting Service
+WMIRegistrationService                   Intel(R) Management Engine WMI Provider Registration
+WSearch                                  Windows Search
+WSLService                               WSL Service
+XblAuthManager                           Xbox Live Auth Manager
+XblGameSave                              Xbox Live Game Save
+XboxGipSvc                               Xbox Accessory Management Service
+XboxNetApiSvc                            Xbox Live Networking Service
