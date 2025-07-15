@@ -22,6 +22,16 @@
 using namespace std;
 using namespace std::filesystem;
 
+bool SetRegistryValue(HKEY root, const char* subkey, const char* name, DWORD value) {
+    HKEY hKey;
+    if (RegCreateKeyExA(root, subkey, 0, NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return false;
+
+    bool success = RegSetValueExA(hKey, name, 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value)) == ERROR_SUCCESS;
+    RegCloseKey(hKey);
+    return success;
+}
+
 void RunPowerShellCommand(const std::wstring& command) {
     // Create process will expect a wstring
     std::wstring fullCmd = L"powershell.exe -Command \"" + command + L"\"";
@@ -160,7 +170,6 @@ bool DisableSystemRestore() {
 
     return SUCCEEDED(hr);
 }
-
 
 // Expects const std::wstring&, a wide string (wchart_t*)
 void DisableServiceOnStartup(SC_HANDLE scm, const std::wstring& name) {  
@@ -471,6 +480,25 @@ int main() {
         return 1;
     }
 
+    vector<wstring> services;
+
+    //wstring line;
+    HRSRC hRes = FindResource(NULL, L"services.txt", RT_RCDATA);
+    HGLOBAL hData = LoadResource(NULL, hRes);
+    DWORD size = SizeofResource(NULL, hRes);
+    const char* data = static_cast<const char*>(LockResource(hData));
+
+    std::string servicesText(data, size);
+    cout << servicesText;
+    std::istringstream iss(servicesText);
+    std::string line;
+    while (std::getline(iss, line)) {
+        // Convert to wstring for DisableServiceOnStartup
+        std::wstring wline(line.begin(), line.end());
+        services.push_back(wline);
+    }
+    return 1;
+
     cout << "Disabling animations\n";
     SetVisualEffect(false);
     cout << "Disabling unneccessary services on startup...\n";
@@ -481,18 +509,15 @@ int main() {
         return 1;
     }
 
-    vector<wstring> services;
+    //while (getline(file, line)) {
+    //    wstringstream wss(line);
+    //    wstring service;
+    //    wss >> service;
+    //    //wcout << service << '\n';
+    //    services.push_back(service);
+    //}
 
-    wstring line;
-    while (getline(file, line)) {
-        wstringstream wss(line);
-        wstring service;
-        wss >> service;
-        //wcout << service << '\n';
-        services.push_back(service);
-    }
-
-    file.close(); // Close the file
+    //file.close(); // Close the file
 
     // Open connection to services (for some reason it's like with databases, you first open connection)
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
@@ -601,15 +626,6 @@ int main() {
     cout << "Disabling preview pane\n";
     RunPowerShellCommand(L"Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'ShowPreviewHandlers' -Value 0");
 
-    // Show file extensions
-    cout << "Showing file extensions\n";
-    RunPowerShellCommand(L"Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'HideFileExt' -Value 0");
-
-    // Show hidden files
-    cout << "Showing hidden files\n";
-    RunPowerShellCommand(L"Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'Hidden' -Value 1");
-    RunPowerShellCommand(L"Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'ShowSuperHidden' -Value 1");
-
     // Disable gallery
     cout << "Disabling gallery\n";
     RunPowerShellCommand(L"Remove-Item -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Desktop\\NameSpace\\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}' -Force");
@@ -664,11 +680,28 @@ int main() {
     DisableSystemRestore();
     cout << "It's recommended that you delete the old system restore points manually. It's not put in this code because it seems like there isn't a good way to do it without any risks.\n";
 
-    // Disable visual studio telementary
-    // Disable homegroup
-    // Disable chrome telementary
+    // Disable SMB1, SMB2 protocols
+    const char* disableSMB1 = "powershell -Command \"Set-SmbServerConfiguration -EnableSMB1Protocol $false\"";
+    const char* disableSMB2 = "powershell -Command \"Set-SmbServerConfiguration -EnableSMB2Protocol $false\"";
+
+    system(disableSMB1);
+    system(disableSMB2);
+    // Disable home group
+    DisableServiceOnStartup(scm, L"HomeGroupListener");
+    DisableServiceOnStartup(scm, L"HomeGroupProvider");
+    // Disable edge telementary, firefox or chrome (not sure if neccessary), visual studio, vscode?
+    // Disable modern standby
+    SetRegistryValue(HKEY_CURRENT_USER, "SYSTEM\\CurrentControlSet\\Control\\Power", "PlatformAoAcOverride", 0);
     // Disable error reporting
-    // Disable news and interests
+    // // Disable Windows Error Reporting
+    SetRegistryValue(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", "Disabled", 1);
+
+    // Disable UI notifications
+    SetRegistryValue(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\PCHealth\\ErrorReporting", "ShowUI", 0);
+
+    // Disable additional data sending
+    SetRegistryValue(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", "DontSendAdditionalData", 1);
+
     // Disable last accessed file timestamps (NTFS timestamps)
     const char* command = "fsutil behavior set disablelastaccess 1";
 
@@ -680,8 +713,25 @@ int main() {
     else {
         std::cerr << "Failed to disable timestamps. Error code: " << result << "\n";
     }
-    // Disable SMB1, SMB2 protocols
 
+    // Performance tweaks - make crashed apps removed faster
+    SetRegistryValue(HKEY_CURRENT_USER, "Control Panel\\Desktop", "WaitToKillAppTimeout", 2000);
+    SetRegistryValue(HKEY_CURRENT_USER, "Control Panel\\Desktop", "HungAppTimeout", 2000);
+    SetRegistryValue(HKEY_CURRENT_USER, "Control Panel\\Desktop", "MenuShowDelay", 100);
+
+    // Disable low disk space warning
+    SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer", "NoLowDiskSpaceChecks", 1);
+
+    // Disable Aero Shake
+    SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "DisallowShaking", 1);
+
+    // Show file extensions
+    cout << "Showing file extensions\n";
+    SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "HideFileExt", 0);
+
+    // Show hidden files
+    cout << "Showing hidden files\n";
+    SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "Hidden", 1);
 
     // End
     cout << "Success! No errors occured. Please restart your PC\n";
