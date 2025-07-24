@@ -11,6 +11,7 @@
 #include <initguid.h>
 #include <devguid.h>
 #include <iostream>
+#include "resource.h"
 
 // For disabling system restore
 #include <comdef.h>
@@ -23,11 +24,15 @@ using namespace std;
 using namespace std::filesystem;
 
 bool SetRegistryValue(HKEY root, const char* subkey, const char* name, DWORD value) {
+    // "Handle" to the registry key. You use it to close the resource.
     HKEY hKey;
+    // Creates the specified registry key. If the key already exists, the function opens it. Note that key names are not case sensitive.
     if (RegCreateKeyExA(root, subkey, 0, NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return false;
 
+    // Here, the value of the registry key is set using the given DWORD, value
     bool success = RegSetValueExA(hKey, name, 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value)) == ERROR_SUCCESS;
+    // Close resource
     RegCloseKey(hKey);
     return success;
 }
@@ -86,6 +91,7 @@ bool DisableTask(const std::wstring& taskPath) {
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi;
 
+    // Create a process to run the command
     BOOL success = CreateProcessW(
         NULL,
         const_cast<LPWSTR>(command.c_str()), // Cast the c string into a LPWSTR (same thing as doing L"yourstring")
@@ -107,15 +113,18 @@ bool DisableTask(const std::wstring& taskPath) {
     // Wait for the command to finish
     WaitForSingleObject(pi.hProcess, INFINITE);
 
+    // Close handles
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return true;
 }
 
 bool DisableSystemRestore() {
+    // Let windows know you are about to start using the COM process
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr)) return false;
 
+    // Registers security settings for our process. So, we are saying "Use default security settings for COM. I’m okay with the system choosing how to authenticate and impersonate."
     hr = CoInitializeSecurity(nullptr, -1, nullptr, nullptr,
         RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE,
         nullptr, EOAC_NONE, nullptr);
@@ -203,19 +212,15 @@ void DisableTelemetryRegistry() {
     DWORD value = 0;
     BYTE* registryEnable = reinterpret_cast<BYTE*>(&value);
 
-    // First, check if registry key can be accessed
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-        // If no error, set the registry key to a value of 0 which disables telementary
-        RegSetValueExW(hKey, L"AllowTelemetry", 0, REG_DWORD, registryEnable, sizeof(value));
-        RegCloseKey(hKey);
-    }
+
+    SetRegistryValue(HKEY_LOCAL_MACHINE, "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "AllowTelemetry", 0);
 }
 
 void DisableDefenderRegistry() {
     HKEY hKey, hSubKey;
     DWORD disable = 1;
 
-    // Main Defender key
+    // Main Defender key. Since this working and the same registry key is being opened, it isn't replaced with SetRegistryValue
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Policies\\Microsoft\\Windows Defender", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
         RegSetValueExW(hKey, L"DisableAntiSpyware", 0, REG_DWORD, (BYTE*)&disable, sizeof(disable));
 
@@ -482,14 +487,29 @@ int main() {
 
     vector<wstring> services;
 
-    //wstring line;
-    HRSRC hRes = FindResource(NULL, L"services.txt", RT_RCDATA);
+    HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDR_SERVICES), TEXT("TEXT"));
+    if (!hRes) {
+        std::cerr << "FindResource failed: " << GetLastError() << std::endl;
+        return 1;
+    }
     HGLOBAL hData = LoadResource(NULL, hRes);
+    if (!hData) {
+        std::cerr << "LoadResource failed: " << GetLastError() << std::endl;
+        return 1;
+    }
     DWORD size = SizeofResource(NULL, hRes);
+    if (size == 0) {
+        std::cerr << "SizeofResource failed: " << GetLastError() << std::endl;
+        return 1;
+    }
     const char* data = static_cast<const char*>(LockResource(hData));
-
+    if (!data) {
+        std::cerr << "LockResource failed." << std::endl;
+        return 1;
+    }
     std::string servicesText(data, size);
     cout << servicesText;
+
     std::istringstream iss(servicesText);
     std::string line;
     while (std::getline(iss, line)) {
@@ -497,27 +517,10 @@ int main() {
         std::wstring wline(line.begin(), line.end());
         services.push_back(wline);
     }
-    return 1;
 
     cout << "Disabling animations\n";
     SetVisualEffect(false);
     cout << "Disabling unneccessary services on startup...\n";
-
-    wifstream file(L"services.txt");
-    if (!file) {
-        std::cerr << "Error: File could not be opened!" << std::endl;
-        return 1;
-    }
-
-    //while (getline(file, line)) {
-    //    wstringstream wss(line);
-    //    wstring service;
-    //    wss >> service;
-    //    //wcout << service << '\n';
-    //    services.push_back(service);
-    //}
-
-    //file.close(); // Close the file
 
     // Open connection to services (for some reason it's like with databases, you first open connection)
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
@@ -733,8 +736,20 @@ int main() {
     cout << "Showing hidden files\n";
     SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "Hidden", 1);
 
+    cout << "Would you like to disable auto update (1) or not disable auto update, but force windows to prompt before updating (2)?";
+    cin >> wait;
+    if (wait == 1) {
+        // Disable auto update
+        SetRegistryValue(HKEY_CURRENT_USER, "Software\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "NoAutoUpdate", 1);
+    }
+    else if (wait == 2) {
+        // TODO: may not work... Force windows to prompt updates
+        SetRegistryValue(HKEY_CURRENT_USER, "Software\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "AUOptions", 2);
+    }
+
     // End
     cout << "Success! No errors occured. Please restart your PC\n";
+    cout << "Another suggestion: System -> Multitasking -> Change show tabs from apps to don't show tabs\n";
     cin >> wait;
     CloseServiceHandle(scm);
     return 0;
