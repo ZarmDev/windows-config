@@ -1,6 +1,8 @@
 # windows-config
 A script that lets you easily optimize your operating system for performance and battery usage.
 
+https://github.com/user-attachments/assets/87c5fabd-5122-4082-bc85-4d49102f3b50
+
 I have tested it and it does not brick your computer or do any other changes like that, but it could break some programs and features
 
 **I added inputs for some feature disabling and there is a comment FOR EVERY SINGLE CHANGE it makes**
