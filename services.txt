@@ -12,12 +12,12 @@ DmEnrollmentSvc                          Device Management Enrollment Service
 dmwappushservice                         Device Management Wireless Application Protocol (WAP) Push message Routing ...
 DPS                                      Diagnostic Policy Service
 DusmSvc                                  Data Usage
-DoSvc                                    Delivery Optimization
 EpicOnlineServices                       Epic Online Services
 esifsvc                                  Intel(R) Dynamic Tuning service
 EventLog                                 Windows Event Log
+FlexNet Licensing Service                FlexNet Licensing Service
 FlexNet Licensing Service 64             FlexNet Licensing Service 64
-HvHost                                   HV Host Service
+HPPrintScanDoctorService                 HP Print Scan Doctor Service
 iaStorAfsService                         Intel(R) Optane(TM) Memory Service
 igccservice                              Intel(R) Graphics Command Center Service
 igfxCUIService2.0.0.0                    Intel(R) HD Graphics Control Panel Service
@@ -41,8 +41,6 @@ nimDNSResponder                          NI mDNS Responder Service
 NINetworkDiscovery                       NI Network Discovery
 NiSvcLoc                                 NI Service Locator
 PhoneSvc                                 Phone Service
-ProtonVPN Service                        ProtonVPN Service
-ProtonVPN WireGuard                      ProtonVPN WireGuard
 RasAuto                                  Remote Access Auto Connection Manager
 RasMan                                   Remote Access Connection Manager
 RemoteAccess                             Routing and Remote Access
@@ -59,8 +57,9 @@ ssh-agent                                OpenSSH Authentication Agent
 ss_conn_service                          SAMSUNG Mobile Connectivity Service
 ss_conn_service2                         SAMSUNG Mobile Connectivity Service V2
 Steam Client Service                     Steam Client Service
+StiSvc                                   Windows Image Acquisition (WIA)
+SysMain                                  SysMain
 TapiSrv                                  Telephony
-TrustedInstaller                         Windows Modules Installer
 tzautoupdate                             Auto Time Zone Updater
 UevAgentService                          User Experience Virtualization Service
 uhssvc                                   Microsoft Update Health Service
@@ -72,6 +71,7 @@ WavesSysSvc                              Waves Audio Services
 WbioSrvc                                 Windows Biometric Service
 WdiServiceHost                           Diagnostic Service Host
 WdiSystemHost                            Diagnostic System Host
+webthreatdefsvc                          Web Threat Defense Service
 WerSvc                                   Windows Error Reporting Service
 WMIRegistrationService                   Intel(R) Management Engine WMI Provider Registration
 WSearch                                  Windows Search

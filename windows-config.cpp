@@ -508,7 +508,7 @@ int main() {
         return 1;
     }
     std::string servicesText(data, size);
-    cout << servicesText;
+    //cout << servicesText;
 
     std::istringstream iss(servicesText);
     std::string line;
@@ -568,13 +568,6 @@ int main() {
     ChangeServiceConfig(service, SERVICE_NO_CHANGE, SERVICE_DISABLED, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     CloseServiceHandle(service);
 
-    // Disable hibernation
-    cout << "Disabling hibernation\n";
-    if (!DisableHibernation()) {
-        std::cerr << "Operation failed. Make sure to run as Administrator." << std::endl;
-        return 1;
-    }
-
     // Disable transparency
     cout << "Disabling transparency\n";
     DisableTransparency();
@@ -602,6 +595,12 @@ int main() {
     // Disable App Relaunch
     cout << "Disabling app relaunch\n";
     DisableARSO();
+
+    cout << "Would you like to completely disable the search component on windows? (1 for yes, otherwise no)";
+    cin >> wait;
+    if (wait == 1) {
+        SetRegistryValue(HKEY_CURRENT_USER, "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search", "DisableSearch", 1);        
+    }
 
     // Disable background apps
     cout << "Disabling background apps\n";
@@ -746,6 +745,27 @@ int main() {
         // TODO: may not work... Force windows to prompt updates
         SetRegistryValue(HKEY_CURRENT_USER, "Software\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "AUOptions", 2);
     }
+
+    // Disable narrator
+    SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Narrator\\NoRoam", "IsRunning", 0);
+
+    // Disable speech services
+    SetRegistryValue(HKEY_CURRENT_USER, "Software\\Microsoft\\Speech_OneCore\\Preferences", "HasAccepted", 0);
+
+    // Force stop tablet input service
+    /*system("powershell.exe -Command \"Stop-Service TabletInputService -Force\"");*/
+
+    // Disable all devices in powercfg / devicequery wake_armed (prevent devices from waking computer)
+
+    // Disable “Show notifications on the lock screen”
+    RunPowershell("Set - ItemProperty - Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings" `-Name "NOC_GLOBAL_SETTING_TOASTS_ENABLED" `- Value 0");
+
+    // Hide the Notification Bell Icon (Action Center)
+    New - Item - Path "HKCU:\Software\Policies\Microsoft\Windows" - Name "Explorer" - Force
+        New - ItemProperty - Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" `
+        - Name "DisableNotificationCenter" `
+        - PropertyType DWord `
+        - Value 1
 
     // End
     cout << "Success! No errors occured. Please restart your PC\n";
